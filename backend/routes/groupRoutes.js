@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const getConnection = require('../config/oracle-connection');
 const oracledb = require('oracledb');
+const auth = require('../middleware/auth');
 
 // POST /groups - Create group and add admin as member
 router.post('/', async (req, res) => {
@@ -61,6 +62,36 @@ router.get('/', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching groups:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /groups/my - List only groups where current user is a member
+router.get('/my', auth, async (req, res) => {
+  try {
+    // Get current user from JWT token
+    const userId = req.user?.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const connection = await getConnection();
+
+    const result = await connection.execute(
+      `SELECT DISTINCT g.id, g.name, g.admin_id, u.name AS admin_name, gm.role
+       FROM groups g
+       JOIN users u ON g.admin_id = u.id
+       JOIN group_members gm ON g.id = gm.group_id
+       WHERE gm.user_id = :userId`,
+      [userId],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await connection.close();
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching user groups:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

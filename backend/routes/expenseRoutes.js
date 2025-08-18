@@ -7,14 +7,15 @@ const getConnection = require('../config/oracle-connection');
 router.post('/', async (req, res) => {
   const { group_id, title, total_amount, category, paid_by } = req.body;
 
-  if (!group_id || !title || !total_amount || !paid_by) {
+  // Validate required fields except paid_by (optional now)
+  if (!group_id || !title || !total_amount) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
 
   try {
     const connection = await getConnection();
 
-    // 1. Insert expense
+    // Insert expense, paid_by can be null or omitted
     const expenseResult = await connection.execute(
       `INSERT INTO expenses (group_id, title, total_amount, category, created_at, paid_by)
        VALUES (:group_id, :title, :total_amount, :category, SYSDATE, :paid_by)
@@ -24,7 +25,7 @@ router.post('/', async (req, res) => {
         title,
         total_amount,
         category,
-        paid_by,
+        paid_by: paid_by || null,  // If undefined/empty, insert null
         id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
       },
       { autoCommit: false }
@@ -32,7 +33,7 @@ router.post('/', async (req, res) => {
 
     const expenseId = expenseResult.outBinds.id[0];
 
-    // 2. Get all users in this group
+    // Get all users in the group to split the expense
     const membersResult = await connection.execute(
       `SELECT user_id FROM group_members WHERE group_id = :group_id`,
       [group_id]
@@ -42,12 +43,13 @@ router.post('/', async (req, res) => {
 
     if (members.length === 0) {
       await connection.rollback();
+      await connection.close();
       return res.status(400).json({ error: 'No members in this group to split expense' });
     }
 
     const share = total_amount / members.length;
 
-    // 3. Insert expense_shares
+    // Insert expense shares without status, DB defaults it to 'unpaid'
     for (const user_id of members) {
       await connection.execute(
         `INSERT INTO expense_shares (expense_id, user_id, share_amount)
@@ -73,12 +75,12 @@ router.get('/:group_id', async (req, res) => {
   try {
     const connection = await getConnection();
 
-    // 1. Get all expenses for the group
+    // Get all expenses for the group with paid_by user name if any
     const expenseResult = await connection.execute(
       `SELECT e.id, e.title, e.total_amount, e.category, e.created_at, 
               u.name AS paid_by_name
        FROM expenses e
-       JOIN users u ON e.paid_by = u.id
+       LEFT JOIN users u ON e.paid_by = u.id
        WHERE e.group_id = :group_id`,
       [group_id]
     );
@@ -89,14 +91,14 @@ router.get('/:group_id', async (req, res) => {
       total_amount: row[2],
       category: row[3],
       created_at: row[4],
-      paid_by: row[5],
+      paid_by: row[5],  // can be null if unpaid
       shares: []
     }));
 
-    // 2. For each expense, get shares
+    // For each expense, get shares with payment status
     for (let expense of expenses) {
       const shareResult = await connection.execute(
-        `SELECT s.user_id, u.name, u.email, s.share_amount ,s.status
+        `SELECT s.user_id, u.name, u.email, s.share_amount, s.status
          FROM expense_shares s
          JOIN users u ON s.user_id = u.id
          WHERE s.expense_id = :expense_id`,
@@ -150,6 +152,41 @@ router.patch('/:expense_id/pay', async (req, res) => {
   } catch (error) {
     console.error('Error updating payment status:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+// DELETE /expenses/:id - delete an expense and its shares
+router.delete('/:id', async (req, res) => {
+  const expenseId = req.params.id;
+
+  const connection = await getConnection();
+  try {
+    // Delete associated expense_shares first
+    await connection.execute(
+      `DELETE FROM expense_shares WHERE expense_id = :id`,
+      [expenseId],
+      { autoCommit: false }
+    );
+
+    // Then delete the expense
+    const result = await connection.execute(
+      `DELETE FROM expenses WHERE id = :id`,
+      [expenseId],
+      { autoCommit: false }
+    );
+
+    await connection.commit();
+
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ error: 'Expense not found' });
+    }
+
+    res.status(200).json({ message: 'Expense and related shares deleted successfully' });
+  } catch (err) {
+    await connection.rollback();
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    await connection.close();
   }
 });
 

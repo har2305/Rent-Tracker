@@ -1,20 +1,46 @@
 const express = require('express');
 const cors = require('cors');     
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const getConnection = require('./config/oracle-connection');
 const bodyParser = require('body-parser');
 const userRoutes = require('./routes/userRoutes');
 const groupRoutes = require('./routes/groupRoutes');
 const groupMembersRoutes = require('./routes/groupMembersRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const PORT = 5000;
+
+// Security middleware
+app.use(helmet());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use(limiter);
+
+// Stricter rate limiting for auth routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 requests per windowMs
+  message: 'Too many authentication attempts, please try again later.'
+});
 
 app.use(cors({
   origin: 'http://localhost:3000'      // ⬅️ Allow frontend origin
 }));
 
 app.use(bodyParser.json()); // ⬅️ To parse JSON bodies
+
+// Authentication routes (with rate limiting)
+app.use('/auth', authLimiter, authRoutes);
+
+// Protected routes
 app.use('/users', userRoutes); // ⬅️ Our new route
 app.use('/groups', groupRoutes);
 app.use('/group_members', groupMembersRoutes);

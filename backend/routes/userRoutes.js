@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const getConnection = require('../config/oracle-connection');
 const oracledb = require('oracledb');
+const auth = require('../middleware/auth');
 
-// POST /users
-router.post('/', async (req, res) => {
+// POST /users (protected - requires authentication)
+router.post('/', auth, async (req, res) => {
   const { name, email, phone } = req.body;
 
   if (!name || !email || !phone) {
@@ -27,7 +28,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const connection = await getConnection();
     const result = await connection.execute('SELECT * FROM users', [],
