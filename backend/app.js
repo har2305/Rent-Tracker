@@ -13,6 +13,10 @@ const authRoutes = require('./routes/authRoutes');
 const app = express();
 const PORT = 5000;
 
+// Session versioning for fail-safe logout
+const SESSION_VERSION = Date.now();
+app.set('SESSION_VERSION', SESSION_VERSION);
+
 // Security middleware
 app.use(helmet());
 
@@ -61,4 +65,5 @@ app.get('/', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🛡️ SESSION_VERSION: ${SESSION_VERSION}`);
 });

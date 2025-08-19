@@ -138,6 +138,25 @@ jspm_packages/
 # dotenv environment variables file
 .env
 
+# Sensitive configuration files
+config/oracle-connection.js
+backend/wallet/
+backend/wallet/*
+*.p12
+*.sso
+*.ora
+ojdbc.properties
+sqlnet.ora
+tnsnames.ora
+
+# Database credentials and backups
+*.db
+*.sqlite
+*.sqlite3
+*.bak
+*.backup
+*.old
+
 # IDE files
 .vscode/
 .idea/

@@ -325,3 +325,30 @@ If you encounter issues when restoring to this checkpoint:
 ---
 
 **💡 Remember**: This checkpoint represents a complete, working application. You can safely restore to this point anytime and have a fully functional Rent Tracker application ready to use or continue development from.
+
+---
+
+## 🆕 Updates Since v1.0.0 (as of August 19, 2025)
+
+### Backend
+- Refined authentication logging and error handling in `authRoutes.js`.
+- Removed test password hashing route for production safety.
+- Improved password verification and user feedback during login.
+- Maintained Oracle DB integration and secure credential management.
+
+### Frontend
+- Continued development and refinement of group details and expense management features.
+- UI/UX improvements and bug fixes.
+- Frontend subproject updated to latest commit.
+
+### Current State
+- Backend and frontend are connected and functional.
+- Authentication, group, and expense flows are working and tested.
+- Ready for further enhancements: error handling, UI/UX, new features, deployment, and testing.
+
+### Next Steps
+- Add advanced features (notifications, charts, group invitations, etc.).
+- Strengthen error handling and validation.
+- Improve accessibility and responsive design.
+- Write and improve automated tests.
+- Prepare for deployment (Docker, CI/CD).

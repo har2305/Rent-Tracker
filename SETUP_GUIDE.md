@@ -177,3 +177,33 @@ RentTracker/
 - [ ] Logout works properly
 
 Once you complete these steps, your authentication system will be fully functional! 🎉 
+
+---
+
+# 🚀 Improvements & Additional Tips (August 19, 2025)
+
+## 🆕 New Features
+- **Fail-Safe Logout:** All user sessions are automatically invalidated when backend or frontend servers restart. Users will be logged out and redirected to the home page if their session is no longer valid.
+
+## 🛠️ Advanced Troubleshooting
+- **Session Expired After Server Restart:** If you see a message about session expiration, simply log in again. This is a security feature to ensure no user remains logged in after a server restart.
+- **Production Setup:** For production, use strong secrets, secure environment variables, and HTTPS. Consider Docker and CI/CD for deployment.
+
+## 📦 Pushing to GitHub (Portfolio/Sharing)
+1. Initialize git: `git init`
+2. Add all files: `git add .`
+3. Commit: `git commit -m "Initial commit: RentTracker project"`
+4. Create a new repo on GitHub and add remote: `git remote add origin https://github.com/<your-username>/<repo-name>.git`
+5. Push: `git push -u origin main`
+
+## 📚 Documentation Links
+- [Backend Documentation](backend/BACKEND_DOCUMENTATION.md)
+- [Frontend Documentation](frontend/FRONTEND_DOCUMENTATION.md)
+- [Restore Point](RESTORE_POINT_v1.0.md)
+
+## ✅ Quick Verification
+- After setup, restart both servers and verify that all users are logged out and see the home page.
+- Test registration, login, and protected routes as described above.
+
+---
+These improvements help you maintain, deploy, and showcase your project more effectively!

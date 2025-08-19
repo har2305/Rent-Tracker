@@ -42,16 +42,17 @@ router.post('/register', async (req, res) => {
     await connection.close();
 
     // Generate JWT token
-    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret-key-for-development-only';
-    if (!process.env.JWT_SECRET) {
-      console.log('⚠️  WARNING: JWT_SECRET not set, using fallback key');
-    }
-    
-    const token = jwt.sign(
-      { userId: result.lastRowid, email: email },
-      jwtSecret,
-      { expiresIn: '24h' }
-    );
+      const jwtSecret = process.env.JWT_SECRET || 'fallback-secret-key-for-development-only';
+      if (!process.env.JWT_SECRET) {
+        console.log('⚠️  WARNING: JWT_SECRET not set, using fallback key');
+      }
+      // Add session version to token
+      const sessionVersion = req.app.get('SESSION_VERSION');
+      const token = jwt.sign(
+        { userId: result.lastRowid, email: email, sessionVersion },
+        jwtSecret,
+        { expiresIn: '24h' }
+      );
 
     res.status(201).json({ 
       message: 'User registered successfully',
@@ -68,11 +69,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
-  console.log('🔐 Login attempt received:', {
-    email: email,
-    password: password,
-    passwordLength: password?.length
-  });
+  console.log('🔐 Login attempt received for email:', email);
 
   if (!email || !password) {
     console.log('❌ Missing email or password');
@@ -97,8 +94,7 @@ router.post('/login', async (req, res) => {
         id: result.rows[0].ID,
         name: result.rows[0].NAME,
         email: result.rows[0].EMAIL,
-        hasPassword: !!result.rows[0].PASSWORD,
-        passwordLength: result.rows[0].PASSWORD?.length
+        hasPassword: !!result.rows[0].PASSWORD
       } : null
     });
 
@@ -118,12 +114,9 @@ router.post('/login', async (req, res) => {
     }
 
     // Verify password
-    console.log('🔐 Comparing passwords...');
-    console.log('Input password:', password);
-    console.log('Stored password hash:', user.PASSWORD);
+    console.log('🔐 Verifying password...');
     
     const isValidPassword = await bcrypt.compare(password, user.PASSWORD);
-    console.log('Password comparison result:', isValidPassword);
     
     if (!isValidPassword) {
       console.log('❌ Password verification failed');
@@ -133,16 +126,17 @@ router.post('/login', async (req, res) => {
     console.log('✅ Password verified successfully');
 
     // Generate JWT token
-    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret-key-for-development-only';
-    if (!process.env.JWT_SECRET) {
-      console.log('⚠️  WARNING: JWT_SECRET not set, using fallback key');
-    }
-    
-    const token = jwt.sign(
-      { userId: user.ID, email: user.EMAIL },
-      jwtSecret,
-      { expiresIn: '24h' }
-    );
+      const jwtSecret = process.env.JWT_SECRET || 'fallback-secret-key-for-development-only';
+      if (!process.env.JWT_SECRET) {
+        console.log('⚠️  WARNING: JWT_SECRET not set, using fallback key');
+      }
+      // Add session version to token
+      const sessionVersion = req.app.get('SESSION_VERSION');
+      const token = jwt.sign(
+        { userId: user.ID, email: user.EMAIL, sessionVersion },
+        jwtSecret,
+        { expiresIn: '24h' }
+      );
 
     console.log('✅ Login successful, token generated');
 
@@ -240,31 +234,6 @@ router.put('/change-password', auth, async (req, res) => {
   }
 });
 
-// Test route to hash a password (remove this in production)
-router.post('/test-hash', async (req, res) => {
-  const { password } = req.body;
-  
-  if (!password) {
-    return res.status(400).json({ error: 'Password is required' });
-  }
 
-  try {
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    
-    console.log('🔐 Password hashing test:');
-    console.log('Original password:', password);
-    console.log('Hashed password:', hashedPassword);
-    
-    res.json({ 
-      originalPassword: password,
-      hashedPassword: hashedPassword,
-      message: 'Password hashed successfully'
-    });
-  } catch (error) {
-    console.error('Error hashing password:', error);
-    res.status(500).json({ error: 'Failed to hash password' });
-  }
-});
 
 module.exports = router; 
