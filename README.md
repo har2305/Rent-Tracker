@@ -1,5 +1,46 @@
 # 🔧 Complete Setup Guide - Fix All Errors
 
+Project Setup Instructions
+1. Environment Variables
+
+Copy the example file to create your local .env:
+
+cp backend/.env.example backend/.env
+
+
+Open .env and fill in your credentials:
+
+DB_HOST=your_database_host
+DB_PORT=your_database_port
+DB_USER=your_database_user
+DB_PASSWORD=your_database_password
+API_KEY=your_api_key_here
+
+
+2. Wallet ( use your database to find this info)
+
+Place your Oracle Wallet or other sensitive credentials here:
+
+backend/wallet/
+├── cwallet.sso
+├── ewallet.p12
+└── tnsnames.ora
+
+
+These files are required for local development but should remain local and private.
+
+3. Database / Local Credentials
+
+If you use local DB files (*.db, *.sqlite3), place them in backend/ as needed.
+
+
+4. Install Dependencies
+npm install
+
+5. Running the Project
+npm start
+
+Make sure .env and backend/wallet/ files exist locally before starting.
 ## 🚨 Current Issues to Fix
 
 ### 1. Install Missing Dependencies
