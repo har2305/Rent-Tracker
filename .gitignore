@@ -4,6 +4,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Sensitive files
+backend/.env
+backend/wallet/
+backend/config/oracle-connection.js
+
+
 # Environment variables
 .env
 .env.local
