@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { fetchMyGroupsWithStats, fetchUsers } from "../services/api";
+import { fetchMyGroupsWithStats, } from "../services/api";
 import authService from '../services/authService';
 
 export default function DashboardPage() {

@@ -23,11 +23,11 @@ const LoginPage = () => {
     setIsLoading(true);
     setError('');
 
-    console.log('🔐 Login attempt with data:', {
-      email: formData.email,
-      password: formData.password,
-      passwordLength: formData.password.length
-    });
+    // console.log('🔐 Login attempt with data:', {
+    //   email: formData.email,
+    //   password: formData.password,
+    //   passwordLength: formData.password.length
+    // });
 
     try {
       console.log('📡 Calling authService.login...');

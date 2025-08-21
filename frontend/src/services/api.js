@@ -68,39 +68,20 @@ export async function fetchMyGroups() {
 export async function fetchMyGroupsWithStats() {
   console.time("fetchMyGroupsWithStats");
   try {
-    const response = await api.get("/groups/my");
+    const response = await api.get("/groups/my-with-stats"); // Backend route
     const groups = response.data;
-    
-    // Fetch additional stats for each group
-    const enhancedGroups = await Promise.all(
-      groups.map(async (group) => {
-        try {
-          // Fetch member count
-          const membersResponse = await api.get(`/group_members/${group.ID}`);
-          const members = membersResponse.data;
-          
-          // Fetch total expenses
-          const expensesResponse = await api.get(`/expenses/${group.ID}`);
-          const expenses = expensesResponse.data;
-          
-          const totalExpenses = expenses.reduce((sum, expense) => sum + parseFloat(expense.total_amount || 0), 0);
-          
-          return {
-            ...group,
-            memberCount: members.length,
-            totalExpenses: totalExpenses.toFixed(2)
-          };
-        } catch (error) {
-          console.error(`Error fetching stats for group ${group.ID}:`, error);
-          return {
-            ...group,
-            memberCount: 0,
-            totalExpenses: "0.00"
-          };
-        }
-      })
-    );
-    
+
+    // Map backend data to match frontend naming and ensure numeric totalExpenses
+    const enhancedGroups = groups.map(group => ({
+      ID: group.ID,
+      NAME: group.NAME,
+      ADMIN_ID: group.ADMIN_ID,
+      ADMIN_NAME: group.ADMIN_NAME,
+      ROLE: group.ROLE,
+      memberCount: group.MEMBERCOUNT || 0,
+      totalExpenses: Number(group.TOTALEXPENSES || 0) // Keep as number for calculations
+    }));
+
     console.timeEnd("fetchMyGroupsWithStats");
     console.log("Enhanced groups data:", enhancedGroups);
     return enhancedGroups;

@@ -1,4 +1,4 @@
-// 🔰 GroupDetailsPage: Shows details of a specific group including Overview, Members, and Expenses tabs
+// 🔰 GroupDetailsPage: Shows details of a specific group including  Members, and Expenses tabs
 
 import React, { useEffect, useState, Fragment } from "react";
 import { useParams, Link } from "react-router-dom";
@@ -143,16 +143,7 @@ export default function GroupDetailsPage() {
 
   // 🔽 Define tab contents
   const tabs = {
-    // 🟦 OVERVIEW TAB
-    Overview: group ? (
-      <div>
-        <h2 className="text-2xl font-semibold text-white mb-1">{group.NAME}</h2>
-        <p className="text-gray-400">Admin: {group.ADMIN_NAME}</p>
-      </div>
-    ) : (
-      <p className="text-gray-500">Group not found.</p>
-    ),
-
+    
     // 🟩 MEMBERS TAB
     Members: (
       <div className="space-y-4">
